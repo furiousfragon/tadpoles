@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tadpoles</title>
+    <style>
+    	/*body { margin: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <script>
+		var height = window.innerHeight-100;
+		var width = window.innerWidth;
+		var trailLength = 20
+		var speed = 2
+		var lag = false
+		var attractionRadius = 50;
+		var repulsionRadius = 0; // Radius within which repulsion force is applied
+		var repulsionStrength = 0; // Strength of the repulsion force
+		var mouseX = 0;
+		var mouseY = 0;
+		var time = 0;
+		var eraserTool = false;
+		var eraserRad = 100;
+		var doErase = false;
+		var currentX = 0;
+		var currentY = 0;
+		var intervalErase = null;
+		function randint(min, max) {
+			return Math.floor(Math.random() * (max - min) ) + min;
+		}
+		document.onmousedown = function(event){
+			if(!eraserTool){
+				if(event.pageY<height+10){
+					//time = Date.now()
+					batchDefine(100,event.pageX,event.pageY)
+				}
+			}
+			else{
+				intervalErase = setInterval(function(){
+					var delList = checkErase(currentX,currentY)
+					for(let i=0;i < delList.length;i++){
+						pixels.splice(delList[i]-i,1)
+					}
+				},100)				
+			}
+		}
+		document.onmouseup = function(event){
+			clearInterval(intervalErase)
+		}
+		document.onmousemove = function(event){
+			currentX = event.pageX;
+			currentY = event.pageY;
+		}
+		var editorTable = document.createElement("div");
+		editorTable.style.position ="absolute";
+		editorTable.style.left = 0;
+		editorTable.style.top = height+"px";
+		editorTable.style.height = 100+"px";
+		editorTable.style.width = width+"px";
+		document.body.appendChild(editorTable)
+		
+		var slider = document.createElement('input');
+        slider.type = 'range';
+        slider.id = 'exampleSlider';
+        slider.min = '0';
+        slider.max = '1000';
+        slider.value = '50';
+        slider.step = '0';
+		slider.style.position = "absolute"
+		slider.style.top = height+25+"px"
+        document.body.appendChild(slider);
+		
+		var valueDisplay = document.createElement('div');
+		valueDisplay.style.position = "absolute";
+		valueDisplay.style.top = height+50+"px";
+        valueDisplay.innerHTML = "attraction radius: "+slider.value;
+        document.body.appendChild(valueDisplay);
+        slider.addEventListener('input', function() {
+            valueDisplay.innerHTML = "attraction radius : "+slider.value;
+			attractionRadius = slider.value
+        });
+		
+		var repulsionRad = document.createElement('input');
+        repulsionRad.type = 'range';
+        repulsionRad.id = 'exampleSlider';
+        repulsionRad.min = '0';
+        repulsionRad.max = '1000';
+        repulsionRad.value = '0';
+        repulsionRad.step = '0';
+		repulsionRad.style.position = "absolute"
+		repulsionRad.style.left = width/6+"px";
+		repulsionRad.style.top = height+25+"px";
+        document.body.appendChild(repulsionRad);
+		
+		var repulsionDisplay = document.createElement('div');
+		repulsionDisplay.style.position = "absolute";
+		repulsionDisplay.style.left = width/6+"px";
+		repulsionDisplay.style.top = height+50+"px";
+        repulsionDisplay.innerHTML = "repulsion radius: "+repulsionRad.value;
+        document.body.appendChild(repulsionDisplay);
+		repulsionRad.addEventListener('input', function() {
+            repulsionDisplay.innerHTML = "repulsion radius : "+repulsionRad.value;
+			repulsionRadius = repulsionRad.value
+        });
+		
+		var repulsionStren = document.createElement('input');
+        repulsionStren.type = 'range';
+        repulsionStren.min = '0';
+        repulsionStren.max = '10000';
+        repulsionStren.value = '0';
+        repulsionStren.step = '0';
+		repulsionStren.style.position = "absolute"
+		repulsionStren.style.left = width/3+"px";
+		repulsionStren.style.top = height+25+"px";
+        document.body.appendChild(repulsionStren);
+		
+		var repulsionStrenDisplay = document.createElement('div');
+		repulsionStrenDisplay.style.position = "absolute";
+		repulsionStrenDisplay.style.left = width/3+"px";
+		repulsionStrenDisplay.style.top = height+50+"px";
+        repulsionStrenDisplay.innerHTML = "repulsion strength: "+repulsionStren.value;
+        document.body.appendChild(repulsionStrenDisplay);
+		repulsionStren.addEventListener('input', function() {
+            repulsionStrenDisplay.innerHTML = "repulsion strength : "+repulsionStren.value;
+			repulsionStrength = repulsionStren.value
+        });
+		
+		var sped = document.createElement('input');
+        sped.type = 'range';
+        sped.min = '0';
+        sped.max = '50';
+        sped.value = '5';
+        sped.step = '0';
+		sped.style.position = "absolute"
+		sped.style.left = width/2+"px";
+		sped.style.top = height+25+"px";
+        document.body.appendChild(sped);
+		
+		var speedDisplay = document.createElement('div');
+		speedDisplay.style.position = "absolute";
+		speedDisplay.style.left = width/2+"px";
+		speedDisplay.style.top = height+50+"px";
+        speedDisplay.innerHTML = "speed: "+sped.value;
+        document.body.appendChild(speedDisplay);
+		sped.addEventListener('input', function() {
+            speedDisplay.innerHTML = "speed: "+sped.value;
+			speed = sped.value
+        });
+		
+		var trailChange = document.createElement('input');
+        trailChange.type = 'range';
+        trailChange.min = '0';
+        trailChange.max = '100';
+        trailChange.value = '20';
+        trailChange.step = '0';
+		trailChange.style.position = "absolute"
+		trailChange.style.left = 2*width/3+"px";
+		trailChange.style.top = height+25+"px";
+        document.body.appendChild(trailChange);
+		
+		var trailDislay = document.createElement('div');
+		trailDislay.style.position = "absolute";
+		trailDislay.style.left = 2*width/3+"px";
+		trailDislay.style.top = height+50+"px";
+        trailDislay.innerHTML = "trail length: "+trailChange.value;
+        document.body.appendChild(trailDislay);
+		trailChange.addEventListener('input', function() {
+            trailDislay.innerHTML = "trail length: "+trailChange.value;
+			trailLength = trailChange.value
+        });
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d',{ willReadFrequently: true });
+		canvas.style.background = "black"
+		canvas.style.webkitFilter = "blur(0.5px)";
+        canvas.width = width-20;
+        canvas.height = height-20;
+		canvas.style.left = "0px";
+		canvas.style.top = "0px"
+        document.body.appendChild(canvas); 
+
+        function checkErase(xCor,yCor){
+        	delList = []
+        	for(let i=0;i<pixels.length;i++){
+        		if(Math.floor((Math.sqrt(Math.pow(pixels[i].trail[0].x-parseFloat(xCor),2),Math.pow(pixels[i].trail[0].y-parseFloat(yCor),2))<=eraserRad))){
+        			delList.push(i);
+        		}
+        	}
+        	console.log(delList)
+        	return delList;
+        }
+		
+		function changeScreen(){			
+			const imageData = ctx.getImageData(0,0, width, height);
+			const data = imageData.data;// Access pixel color info
+			for (let y = 0; y < height; y++) {
+				for (let x = 0; x < width; x++) {
+						const index = (y * width + x) * 4;//finds the index of each pixel, the *4 is bc rgba
+						//const grayValue = Math.floor((x / width) * 255); makes it greyscale gradient
+						grayValue = randint(0,255);
+						data[index] = grayValue;   // Red
+						data[index + 1] = grayValue; // Green
+						data[index + 2] = grayValue; // Blue
+						data[index + 3] = 255; // Alpha (opacity), fully opaque
+				}
+			}
+			ctx.putImageData(imageData, 0, 0);
+		}
+		function fade(){
+			const imageData = ctx.getImageData(0, 0, width, height);
+			const data = imageData.data;// Access pixel color info
+			for (let y = 0; y < height; y++) {
+				for (let x = 0; x < width; x++) {
+					const index = (y * width + x) * 4;//finds the index of each pixel, the *4 is bc rgba
+					//const grayValue = Math.floor((x / width) * 255); makes it greyscale gradient
+					data[index+3] -=2;
+				}
+			}
+			ctx.putImageData(imageData, 0, 0);
+		}
+		function batchDefine(num,x=-1,y=-1) {
+			if(x===-1){
+				for (let x = 0; x < num; x++) {
+					var i = randint(0, height);
+					var j = randint(0, width);
+					createPixel(j, i);
+				}
+			}
+			else{
+				for (let i = 0; i < num; i++) {
+					createPixel(x, y);
+				}
+			}
+			/*for (let i = 0; i < num; i++) {
+                createPixel(x === -1 ? randint(0, width) : x, y === -1 ? randint(0, height) : y);
+            }*/
+		}
+		var pixels = [];
+		function createPixel(x, y) {
+			//x = width/2; // SETS ALL ELEMENTS TO START AT CENTER
+			//y = height/2;
+			const angle = Math.random() * 2 * Math.PI; //THIS MAKES IT INTO A BALL
+			const dx = speed * Math.cos(angle);
+			const dy = speed * Math.sin(angle);
+			const pixel = {
+				color: [randint(0,255),randint(0,255),randint(0,255)]/*[randint(170,255),randint(10,100),randint(0,0)]*/,
+				trail:[{x , y }], // Initialize trail with current position
+				dx: dx, //THIS MAKES IT INTO A BALL
+				dy: dy, 
+				//dx: randint(-10, 10),
+				//dy: randint(-10, 10),
+			};
+			pixels.push(pixel);
+		}
+
+		function drawPixel() {
+			//ctx.clearRect(0, 0, canvas.width, canvas.height);
+			for (const pixel of pixels) {
+				// Draw the trail
+				ctx.beginPath();
+				ctx.moveTo(pixel.trail[0].x, pixel.trail[0].y);
+				for (let i = 1; i < pixel.trail.length && i<trailLength; i++) {
+					const pos = pixel.trail[i];
+					ctx.strokeStyle = `rgba(${pixel.color[0]}, ${pixel.color[1]}, ${pixel.color[2]},1)`;
+					ctx.lineTo(pos.x, pos.y);
+				}
+				ctx.lineWidth = 2;
+				ctx.stroke();
+			}
+		}
+
+		function updatePixel() {
+			for (let i = 0; i < pixels.length; i++) {
+				const pixel = pixels[i];
+
+				let avgX = 0, avgY = 0;
+				let avgDx = 0, avgDy = 0;
+				let count = 0;
+
+				// Calculate averages based on neighbors within the radius
+				for (let j = 0; j < pixels.length; j++) {
+					if (i !== j) {
+						const neighbor = pixels[j];
+						const dist = Math.hypot(pixel.trail[0].x - neighbor.trail[0].x, pixel.trail[0].y - neighbor.trail[0].y);
+
+						// Cohesion and alignment calculations
+						if (dist < attractionRadius) {
+							avgX += neighbor.trail[0].x;
+							avgY += neighbor.trail[0].y;
+							avgDx += neighbor.dx;
+							avgDy += neighbor.dy;
+							count++;
+						}
+
+						// Repulsion calculations
+						if (dist < repulsionRadius) {
+							const repulsionForce = (repulsionRadius - dist) / repulsionRadius; // Calculate force based on distance
+							const repulsionX = (pixel.trail[0].x - neighbor.trail[0].x) * repulsionForce * repulsionStrength;
+							const repulsionY = (pixel.trail[0].y - neighbor.trail[0].y) * repulsionForce * repulsionStrength;
+							pixel.dx += repulsionX;
+							pixel.dy += repulsionY;
+						}
+					}
+				}
+
+				if (count > 0) {
+					avgX /= count;
+					avgY /= count;
+					avgDx /= count;
+					avgDy /= count;
+
+					// Cohesion: Move towards the average position of neighbors
+					const cohesionX = avgX - pixel.trail[0].x;
+					const cohesionY = avgY - pixel.trail[0].y;
+
+					// Alignment: Align direction with the average direction of neighbors
+					const alignmentDx = avgDx - pixel.dx;
+					const alignmentDy = avgDy - pixel.dy;
+
+					// Update direction with cohesion and alignment
+					pixel.dx += (cohesionX * 0.01) + (alignmentDx * 0.01);
+					pixel.dy += (cohesionY * 0.01) + (alignmentDy * 0.01);
+					
+					// Normalize the direction vector to maintain constant speed
+					const magnitude = Math.sqrt(pixel.dx * pixel.dx + pixel.dy * pixel.dy);
+					if (magnitude > 0) {
+						pixel.dx = (pixel.dx / magnitude) * speed;
+						pixel.dy = (pixel.dy / magnitude) * speed;
+					}
+				}
+				
+				// Move the entire trail
+				 pixel.trail.unshift({ x: pixel.trail[0].x + pixel.dx, y: pixel.trail[0].y + pixel.dy });
+
+				// Limit the length of the trail
+				if (pixel.trail.length > trailLength) {
+					pixel.trail.pop();
+				}
+
+				// Check for collision with canvas edges
+				if (pixel.trail[0].x < 0) {
+					pixel.trail[0].x = 0;
+					pixel.dx = -pixel.dx;
+				}
+				if (pixel.trail[0].x > canvas.width) {
+					pixel.trail[0].x = canvas.width;
+					pixel.dx = -pixel.dx;
+				}
+				if (pixel.trail[0].y < 0) {
+					pixel.trail[0].y = 0;
+					pixel.dy = -pixel.dy;
+				}
+				if (pixel.trail[0].y > canvas.height) {
+					pixel.trail[0].y = canvas.height;
+					pixel.dy = -pixel.dy;
+				}
+			}
+		}
+
+		function animate() {
+			//ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas each frame
+			/*if(lag){
+				changeScreen()
+				pixels = []
+			}*/
+			updatePixel();
+			drawPixel();
+			fade();
+			requestAnimationFrame(animate); // Request the next frame
+		}
+
+		const numAgents = 20000;
+	    const trailMap = new Float32Array(canvas.width * canvas.height).fill(0);
+	    const decayRate = 0.5;
+	    const trailStrength = 10;
+	    const randomFactor = 0//0.0000001;
+	    const sensorOffset = 10;
+	    const sensorAngle = 0.5;
+	    const turnSpeed = 0.3;
+	    const agents = [];
+
+	    function Agent(x, y) {
+	        this.x = x;
+	        this.y = y;
+	        this.angle = Math.random() * 2 * Math.PI;
+	    }
+
+	    function init() {
+	        for (let i = 0; i < numAgents; i++) {
+	            agents.push(new Agent(canvas.width/2, canvas.height/2));
+	        }
+	        requestAnimationFrame(update);
+	    }
+
+	    function sense(agent, offsetAngle) {
+	        const sensorX = Math.floor(agent.x + Math.cos(agent.angle + offsetAngle) * sensorOffset);
+	        const sensorY = Math.floor(agent.y + Math.sin(agent.angle + offsetAngle) * sensorOffset);
+	        if (sensorX >= 0 && sensorX < canvas.width && sensorY >= 0 && sensorY < canvas.height) {
+	            return trailMap[sensorY * canvas.width + sensorX];
+	        }
+	        return 0;
+	    }
+
+	    function update() {
+	        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+	        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	        agents.forEach(agent => {
+	            const left = sense(agent, -sensorAngle);
+	            const forward = sense(agent, 0);
+	            const right = sense(agent, sensorAngle);
+
+	            if (forward > left && forward > right) {
+	                agent.angle += (Math.random() - 0.5) * randomFactor;
+	            } else if (left > right) {
+	                agent.angle -= turnSpeed;
+	            } else if (right > left) {
+	                agent.angle += turnSpeed;
+	            }
+
+	            agent.x += Math.cos(agent.angle) * speed;
+	            agent.y += Math.sin(agent.angle) * speed;
+
+	            if (agent.x < 0) agent.x += canvas.width;
+	            if (agent.x > canvas.width) agent.x -= canvas.width;
+	            if (agent.y < 0) agent.y += canvas.height;
+	            if (agent.y > canvas.height) agent.y -= canvas.height;
+
+	            const x = Math.floor(agent.x);
+	            const y = Math.floor(agent.y);
+	            trailMap[y * canvas.width + x] += trailStrength;
+
+	            ctx.fillStyle = 'white';
+	            ctx.fillRect(agent.x, agent.y, 1, 1);
+	        });
+
+	        for (let i = 0; i < trailMap.length; i++) {
+	            trailMap[i] *= decayRate;
+	        }
+
+	        requestAnimationFrame(update);
+	    }
+
+	    //init();
+		// Initialize and start the animation
+		batchDefine(300,200,200); // Create 1000 pixels
+		animate(); // Start the animation
+		console.log(ctx.getImageData(0, 0, width, height).data)
+		//changeScreen()
+		//setTimeout(function(){lag = true}, 5000); //SETS LAG
+		function sunLoop(i=0){
+			if(i<100){
+				setTimeout(function(){attractionRadius = 20;setTimeout(function(){attractionRadius = 200;}, 7000);}, 10000);
+				setTimeout(function(){attractionRadius = 1000;setTimeout(function(){attractionRadius = 20;}, 10000);}, 35000);
+				setTimeout(function(){attractionRadius = 1000;sunLoop(i+1);}, 55000)
+			}
+		}
+		//sunLoop()
+    </script>
+</body>
+</html>
